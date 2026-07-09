@@ -370,28 +370,42 @@ public class AnalyticsPanel extends JPanel {
         } else {
             // Strengths: top 2
             int shownStr = 0;
+            List<String> strengthsList = new ArrayList<>();
             for (int i = 0; i < played.size() && shownStr < 2; i++) {
                 Map.Entry<String, Double> e = played.get(i);
-                JLabel item = new JLabel(" ✅  " + e.getKey() + ": " + fmt(e.getValue()) + "% Accuracy");
-                item.setFont(new Font("SansSerif", Font.BOLD, 12));
-                item.setForeground(SUCCESS_GREEN);
-                strengthsPanel.add(item);
-                shownStr++;
+                if (e.getValue() >= 70.0) { // Baseline for strength
+                    JLabel item = new JLabel(" ✅  " + e.getKey() + ": " + fmt(e.getValue()) + "% Accuracy");
+                    item.setFont(new Font("SansSerif", Font.BOLD, 12));
+                    item.setForeground(SUCCESS_GREEN);
+                    strengthsPanel.add(item);
+                    strengthsList.add(e.getKey());
+                    shownStr++;
+                }
             }
+            if (shownStr == 0) {
+                JLabel item = new JLabel(" 🔍 Keep practicing to build strengths!");
+                item.setFont(new Font("SansSerif", Font.PLAIN, 12));
+                item.setForeground(TEXT_MUTED);
+                strengthsPanel.add(item);
+            }
+            
             strengthsPanel.add(Box.createVerticalStrut(10));
+            
             // Weaknesses: bottom 2
             int shownWeak = 0;
             for (int i = played.size() - 1; i >= 0 && shownWeak < 2; i--) {
                 Map.Entry<String, Double> e = played.get(i);
-                if (e.getValue() >= 90.0) continue; // don't list mastered as weaknesses
-                JLabel item = new JLabel(" ⚠️  " + e.getKey() + ": " + fmt(e.getValue()) + "% accuracy");
-                item.setFont(new Font("SansSerif", Font.PLAIN, 12));
-                item.setForeground(TEXT_DARK);
-                strengthsPanel.add(item);
-                shownWeak++;
+                if (strengthsList.contains(e.getKey())) continue; // prevent overlap
+                if (e.getValue() < 70.0) { // Baseline for weakness
+                    JLabel item = new JLabel(" ⚠️  " + e.getKey() + ": " + fmt(e.getValue()) + "% accuracy");
+                    item.setFont(new Font("SansSerif", Font.PLAIN, 12));
+                    item.setForeground(TEXT_DARK);
+                    strengthsPanel.add(item);
+                    shownWeak++;
+                }
             }
-            if (shownWeak == 0) {
-                JLabel item = new JLabel(" 🎉 Outstanding! All categories mastered!");
+            if (shownWeak == 0 && shownStr > 0) {
+                JLabel item = new JLabel(" 🎉 Outstanding! No weak areas detected!");
                 item.setFont(new Font("SansSerif", Font.BOLD, 12));
                 item.setForeground(ACCENT_GOLD);
                 strengthsPanel.add(item);
