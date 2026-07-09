@@ -35,15 +35,21 @@ public class AnalyticsPanel extends JPanel {
     private static final Color BORDER_CLR   = new Color(230, 227, 220);
     private static final Color GRID_COLOR   = new Color(235, 232, 225);
 
-    private static final String[] CATEGORY_LABELS =
-            {"Addition", "Difference", "Multiply", "Division", "Mixed", "Special"};
+    private static final String[] CATEGORY_LABELS = {
+            "Addition", "Difference", "Multiplication", "Division", "Mixed", "Special",
+            "Fractions", "Patterns", "Algebra", "Measurement"
+    };
     private static final Color[] CATEGORY_COLORS  = {
-        new Color(99, 179, 237),   // blue
-        new Color(154, 205, 50),   // yellow-green
-        new Color(255, 153, 51),   // orange
-        new Color(218, 112, 214),  // orchid
-        new Color(64, 224, 208),   // turquoise
-        new Color(255, 99, 132),   // pink-red
+        new Color(99, 179, 237),   // blue (Addition)
+        new Color(154, 205, 50),   // yellow-green (Difference)
+        new Color(255, 153, 51),   // orange (Multiplication)
+        new Color(218, 112, 214),  // orchid (Division)
+        new Color(64, 224, 208),   // turquoise (Mixed)
+        new Color(255, 99, 132),   // pink-red (Special)
+        new Color(147, 112, 219),  // medium purple (Fractions)
+        new Color(255, 215, 0),    // gold (Patterns)
+        new Color(72, 209, 204),   // medium turquoise (Algebra)
+        new Color(255, 127, 80)    // coral (Measurement)
     };
 
     // ── State ─────────────────────────────────────────────────────────────────

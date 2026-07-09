@@ -17,9 +17,10 @@ import java.util.*;
  */
 public class AnalyticsService {
 
-    /** The six canonical categories (lowercase keys). */
+    /** The canonical categories. */
     public static final String[] ALL_CATEGORIES = {
-        "Addition", "Difference", "Multiplication", "Division", "Mixed", "Special"
+        "Addition", "Difference", "Multiplication", "Division", "Mixed", "Special",
+        "Fractions", "Patterns", "Algebra", "Measurement"
     };
 
     private final SessionRepository repository;
