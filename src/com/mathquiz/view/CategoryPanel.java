@@ -90,20 +90,21 @@ public class CategoryPanel extends JPanel {
         return p;
     }
 
-    private JPanel buildGrid() {
-        JPanel outer = new JPanel(new GridBagLayout());
-        outer.setOpaque(false);
-
-        categoryGrid = new JPanel(new GridLayout(2, 5, 12, 12));
+    private JComponent buildGrid() {
+        categoryGrid = new JPanel(new GridLayout(0, 3, 16, 16));
         categoryGrid.setOpaque(false);
-        categoryGrid.setBorder(new EmptyBorder(10, 40, 30, 40));
+        categoryGrid.setBorder(new EmptyBorder(10, 40, 20, 40));
 
         for (int i = 0; i < CATEGORIES.length; i++) {
             categoryGrid.add(buildCategoryCard(i));
         }
 
-        outer.add(categoryGrid);
-        return outer;
+        JScrollPane scrollPane = new JScrollPane(categoryGrid);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        return scrollPane;
     }
 
     private JPanel buildCategoryCard(int idx) {
@@ -205,9 +206,9 @@ public class CategoryPanel extends JPanel {
                 } else if (code == KeyEvent.VK_RIGHT) {
                     nextIdx = (idx + 1) % numCats;
                 } else if (code == KeyEvent.VK_UP) {
-                    nextIdx = (idx - 5 + numCats) % numCats;
+                    nextIdx = (idx - 3 + numCats) % numCats;
                 } else if (code == KeyEvent.VK_DOWN) {
-                    nextIdx = (idx + 5) % numCats;
+                    nextIdx = (idx + 3) % numCats;
                 } else if (code == KeyEvent.VK_ENTER || code == KeyEvent.VK_SPACE) {
                     nav.startQuiz(cat, questionCount, difficulty);
                     return;
