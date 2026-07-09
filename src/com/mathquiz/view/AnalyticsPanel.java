@@ -694,6 +694,22 @@ public class AnalyticsPanel extends JPanel {
 
             int n = CATEGORY_LABELS.length;
 
+            // Empty state check first
+            if (data == null || data.values().stream().allMatch(v -> v == 0.0)) {
+                g2.setColor(AppTheme.getBorderClr());
+                g2.setStroke(new BasicStroke(1f));
+                Polygon hex = makeHexPoly(cx, cy, maxR, n, -Math.PI / 2);
+                g2.draw(hex);
+
+                g2.setColor(AppTheme.getTextMuted());
+                g2.setFont(new Font("SansSerif", Font.PLAIN, 11));
+                FontMetrics fm = g2.getFontMetrics();
+                String msg = "No category data yet";
+                g2.drawString(msg, cx - fm.stringWidth(msg) / 2f, cy + 4);
+                g2.dispose();
+                return;
+            }
+
             g2.setFont(new Font("SansSerif", Font.PLAIN, 8));
             for (int ring : new int[]{25, 50, 75, 100}) {
                 float r = maxR * ring / 100f;
@@ -715,17 +731,6 @@ public class AnalyticsPanel extends JPanel {
                 g2.drawLine((int) cx, (int) cy,
                             (int)(cx + maxR * Math.cos(angle)),
                             (int)(cy + maxR * Math.sin(angle)));
-            }
-
-            // Empty state
-            if (data == null || data.values().stream().allMatch(v -> v == 0.0)) {
-                g2.setColor(AppTheme.getTextMuted());
-                g2.setFont(new Font("SansSerif", Font.PLAIN, 11));
-                FontMetrics fm = g2.getFontMetrics();
-                String msg = "No category data yet";
-                g2.drawString(msg, cx - fm.stringWidth(msg) / 2f, cy + 4);
-                g2.dispose();
-                return;
             }
 
             float[] dataX = new float[n];
