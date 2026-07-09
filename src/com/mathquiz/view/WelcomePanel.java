@@ -9,12 +9,11 @@ import com.mathquiz.config.AppConfig;
 import com.mathquiz.service.AnalyticsService;
 import com.mathquiz.service.SessionRepository;
 import com.mathquiz.model.Question;
-
+import com.mathquiz.service.SoundService;
 
 /**
- * Welcome / Configuration screen.
- * Lets the child set the number of questions and difficulty before choosing a category.
- * Exposes named component accessors so TourManager can target them for spotlighting.
+ * Redesigned Welcome / Configuration Dashboard panel.
+ * Uses a modern two-column SaaS-style educational dashboard layout.
  */
 public class WelcomePanel extends JPanel {
 
@@ -31,7 +30,7 @@ public class WelcomePanel extends JPanel {
     private JComboBox<String> diffCombo;
     private JButton          startButton;
 
-    // Phase 3 components
+    // Preference buttons
     private JButton soundToggleBtn;
     private JButton themeToggleBtn;
     private JButton achievementsBtn;
@@ -45,24 +44,17 @@ public class WelcomePanel extends JPanel {
     private JLabel diffLabel;
     private JPanel configCardPanel;
     private JPanel topBarPanel;
-    private JPanel brandHeaderPanel;
-    private JPanel footerPanel;
     private JPanel calendarStripHolder;
 
-    // Phase 4 components
     private JButton profileButton;
     private JButton scaleToggleBtn;
 
-    // Phase 5 components
     private JButton customBuilderBtn;
     private JButton customLoadBtn;
     private JLabel customLabel;
 
-
-
     private final AppConfig config = AppConfig.getInstance();
     private final QuizNavigator nav;
-
 
     public WelcomePanel(QuizNavigator nav) {
         this.nav = nav;
@@ -72,7 +64,6 @@ public class WelcomePanel extends JPanel {
     }
 
     // ── Public accessors for TourManager ─────────────────────────────────────
-
     public JTextField        getQuestionCountField() { return qCountField; }
     public JComboBox<String> getDifficultyCombo()    { return diffCombo;   }
     public JButton           getStartButton()        { return startButton; }
@@ -88,8 +79,6 @@ public class WelcomePanel extends JPanel {
     public JButton getSmartPracticeBtn() { return smartPracticeBtn; }
     public JButton getAchievementsBtn() { return achievementsBtn; }
 
-
-    /** Returns the current question count, defaulting to 10 on parse error. */
     public int getQuestionCount() {
         try {
             int v = Integer.parseInt(qCountField.getText().trim());
@@ -99,87 +88,112 @@ public class WelcomePanel extends JPanel {
         }
     }
 
-    /** Returns the selected difficulty string. */
     public String getDifficulty() {
         return (String) diffCombo.getSelectedItem();
     }
 
     // ── UI construction ───────────────────────────────────────────────────────
-
     private void build() {
-        JPanel headerContainer = new JPanel(new BorderLayout());
-        headerContainer.setOpaque(false);
+        // Top preference bar
         topBarPanel = buildTopBar();
-        brandHeaderPanel = buildBrandHeader();
-        headerContainer.add(topBarPanel, BorderLayout.NORTH);
-        headerContainer.add(brandHeaderPanel, BorderLayout.CENTER);
+        add(topBarPanel, BorderLayout.NORTH);
 
-        add(headerContainer, BorderLayout.NORTH);
-        configCardPanel = buildConfigCard();
-        add(configCardPanel,  BorderLayout.CENTER);
-        footerPanel = buildFooter();
-        add(footerPanel,      BorderLayout.SOUTH);
-    }
-
-
-    private JPanel buildBrandHeader() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setOpaque(false);
-        panel.setBorder(new EmptyBorder(20, 20, 10, 20));
+        // Dashboard main grid (2-Column)
+        JPanel mainContent = new JPanel(new GridBagLayout());
+        mainContent.setOpaque(false);
+        mainContent.setBorder(new EmptyBorder(10, 30, 20, 30));
 
         GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weighty = 1.0;
+
+        // Left Column (width ~58%)
         gbc.gridx = 0;
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridy = 0;
+        gbc.weightx = 0.58;
+        gbc.insets = new Insets(0, 0, 0, 20);
+        mainContent.add(buildLeftColumn(), gbc);
 
-        // Brand Logo
-        int gridRow = 0;
-        try {
-            java.net.URL logoUrl = WelcomePanel.class.getResource("/com/mathquiz/resources/logo.png");
-            if (logoUrl != null) {
-                ImageIcon logoIcon = new ImageIcon(logoUrl);
-                Image scaledImg = logoIcon.getImage().getScaledInstance(75, 75, Image.SCALE_SMOOTH);
-                JLabel logoLabel = new JLabel(new ImageIcon(scaledImg));
-                gbc.gridy = gridRow++;
-                gbc.insets = new Insets(0, 0, 10, 0);
-                panel.add(logoLabel, gbc);
-            }
-        } catch (Exception e) {
-            System.err.println("Could not load logo in WelcomePanel: " + e.getMessage());
-        }
-
-        // Sub-brand line
-        gbc.gridy = gridRow++;
+        // Right Column (width ~42%)
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.weightx = 0.42;
         gbc.insets = new Insets(0, 0, 0, 0);
-        subBrand = new JLabel("ATELIER ARITHMETIC");
-        subBrand.setFont(new Font("Serif", Font.PLAIN, 11));
-        subBrand.setForeground(ACCENT_GOLD);
-        panel.add(subBrand, gbc);
+        mainContent.add(buildRightColumn(), gbc);
 
-        // Main title
-        gbc.gridy = gridRow++;
-        titleLabel = new JLabel("Royal Mathematics Quiz");
-        titleLabel.setFont(new Font("Serif", Font.PLAIN, 34));
-        titleLabel.setForeground(TEXT_DARK);
-        panel.add(titleLabel, gbc);
+        add(mainContent, BorderLayout.CENTER);
+    }
 
-        // Tagline
-        gbc.gridy = gridRow++;
-        taglineLabel = new JLabel("Test your arithmetic skills with bespoke challenges!");
-        taglineLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        taglineLabel.setForeground(TEXT_MUTED);
-        panel.add(taglineLabel, gbc);
+    private JPanel buildLeftColumn() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setOpaque(false);
 
-        // Streak Calendar Visualizer
-        gbc.gridy = gridRow++;
-        gbc.insets = new Insets(15, 0, 0, 0);
-        calendarStripHolder = new JPanel(new BorderLayout());
-        calendarStripHolder.setOpaque(false);
-        calendarStripHolder.add(buildCalendarStrip());
-        panel.add(calendarStripHolder, gbc);
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1.0;
+
+        // Hero mascot header
+        c.gridx = 0; c.gridy = 0;
+        c.insets = new Insets(0, 0, 16, 0);
+        panel.add(buildHeroHeader(), c);
+
+        // Config card
+        c.gridx = 0; c.gridy = 1;
+        c.weighty = 1.0;
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = new Insets(0, 0, 0, 0);
+        configCardPanel = buildConfigCard();
+        panel.add(configCardPanel, c);
 
         return panel;
     }
 
+    private JPanel buildHeroHeader() {
+        JPanel panel = new JPanel(new BorderLayout(16, 0));
+        panel.setOpaque(false);
+        panel.setBorder(new EmptyBorder(8, 10, 8, 10));
+
+        // Mascot logo
+        try {
+            java.net.URL logoUrl = WelcomePanel.class.getResource("/com/mathquiz/resources/logo.png");
+            if (logoUrl != null) {
+                ImageIcon logoIcon = new ImageIcon(logoUrl);
+                Image scaledImg = logoIcon.getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
+                JLabel logoLabel = new JLabel(new ImageIcon(scaledImg));
+                panel.add(logoLabel, BorderLayout.WEST);
+            }
+        } catch (Exception e) {}
+
+        // Titles
+        JPanel textPanel = new JPanel(new GridBagLayout());
+        textPanel.setOpaque(false);
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1.0;
+        c.gridx = 0;
+
+        c.gridy = 0;
+        subBrand = new JLabel("ATELIER ARITHMETIC");
+        subBrand.setFont(new Font("Serif", Font.BOLD, 10));
+        subBrand.setForeground(ACCENT_GOLD);
+        textPanel.add(subBrand, c);
+
+        c.gridy = 1;
+        titleLabel = new JLabel("Royal Mathematics Quiz");
+        titleLabel.setFont(new Font("Serif", Font.PLAIN, 24));
+        titleLabel.setForeground(TEXT_DARK);
+        textPanel.add(titleLabel, c);
+
+        c.gridy = 2;
+        c.insets = new Insets(4, 0, 0, 0);
+        taglineLabel = new JLabel("<html><body>🦉 <b>Archie says:</b> \"Ready for a math adventure? Configure below and select a category!\"</body></html>");
+        taglineLabel.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        taglineLabel.setForeground(TEXT_MUTED);
+        textPanel.add(taglineLabel, c);
+
+        panel.add(textPanel, BorderLayout.CENTER);
+        return panel;
+    }
 
     private JPanel buildConfigCard() {
         JPanel outer = new JPanel(new GridBagLayout());
@@ -187,80 +201,267 @@ public class WelcomePanel extends JPanel {
 
         JPanel card = new JPanel(new GridBagLayout());
         card.setBackground(BG_CARD);
+        card.setOpaque(true);
         card.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(BORDER_CLR, 1),
-                new EmptyBorder(18, 30, 18, 30)));
+                new EmptyBorder(22, 30, 22, 30)));
 
         GridBagConstraints c = new GridBagConstraints();
         c.fill   = GridBagConstraints.HORIZONTAL;
-        c.insets = new Insets(6, 10, 6, 10);
+        c.insets = new Insets(10, 10, 10, 10);
 
-        // ── Row 0: Question count ─────────────────────────────────────────────
+        // Row 0: Question count
         c.gridx = 0; c.gridy = 0;
+        c.weightx = 0.4;
         countLabel = makeLabel("NUMBER OF QUESTIONS:");
         card.add(countLabel, c);
 
         c.gridx = 1;
+        c.weightx = 0.6;
         qCountField = new JTextField("10", 8);
         styleTextField(qCountField);
         card.add(qCountField, c);
 
-        // ── Row 1: Difficulty ─────────────────────────────────────────────────
+        // Row 1: Difficulty
         c.gridx = 0; c.gridy = 1;
+        c.weightx = 0.4;
         diffLabel = makeLabel("DIFFICULTY LEVEL:");
         card.add(diffLabel, c);
 
-
         c.gridx = 1;
+        c.weightx = 0.6;
         diffCombo = new JComboBox<>(new String[]{"Easy", "Medium", "Hard"});
         diffCombo.setFont(new Font("SansSerif", Font.PLAIN, 13));
         card.add(diffCombo, c);
 
-        // ── Row 2: Custom Quiz ────────────────────────────────────────────────
+        // Row 2: Custom Quiz
         c.gridx = 0; c.gridy = 2;
+        c.weightx = 0.4;
         customLabel = makeLabel("CUSTOM QUIZZES:");
         card.add(customLabel, c);
 
         c.gridx = 1;
+        c.weightx = 0.6;
         JPanel customBtnsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         customBtnsPanel.setOpaque(false);
 
         customBuilderBtn = new JButton("🛠️ Quiz Builder");
         customBuilderBtn.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        customBuilderBtn.setBackground(AppTheme.getBgCard());
-        customBuilderBtn.setForeground(AppTheme.getTextMuted());
         customBuilderBtn.setFocusPainted(false);
-        customBuilderBtn.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(AppTheme.getBorderClr(), 1),
-                new EmptyBorder(6, 12, 6, 12)));
         customBuilderBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         customBuilderBtn.addActionListener(e -> nav.showQuizBuilder());
         customBtnsPanel.add(customBuilderBtn);
 
         customLoadBtn = new JButton("📂 Load Quiz");
         customLoadBtn.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        customLoadBtn.setBackground(AppTheme.getBgCard());
-        customLoadBtn.setForeground(AppTheme.getTextMuted());
         customLoadBtn.setFocusPainted(false);
-        customLoadBtn.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(AppTheme.getBorderClr(), 1),
-                new EmptyBorder(6, 12, 6, 12)));
         customLoadBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         customLoadBtn.addActionListener(e -> handleLoadCustomQuiz(customLoadBtn));
         customBtnsPanel.add(customLoadBtn);
 
         card.add(customBtnsPanel, c);
 
-        // ── Row 3: Start Button ───────────────────────────────────────────────
+        // Row 3: Start Button
         c.gridx = 0; c.gridy = 3;
         c.gridwidth = 2;
-        c.insets = new Insets(14, 10, 4, 10);
+        c.insets = new Insets(24, 10, 4, 10);
         startButton = makePrimaryButton("CHOOSE CATEGORY  →");
         startButton.addActionListener(e -> handleStart());
         card.add(startButton, c);
 
         outer.add(card);
         return outer;
+    }
+
+    private JPanel buildRightColumn() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setOpaque(false);
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 1.0;
+        c.gridx = 0;
+
+        // Card 1: Daily challenge
+        c.gridy = 0;
+        c.weighty = 0.35;
+        c.insets = new Insets(0, 0, 14, 0);
+        panel.add(buildDailyChallengeCard(), c);
+
+        // Card 2: Stats & Progress
+        c.gridy = 1;
+        c.weighty = 0.35;
+        c.insets = new Insets(0, 0, 14, 0);
+        panel.add(buildStatsCard(), c);
+
+        // Card 3: Guide & smart practice
+        c.gridy = 2;
+        c.weighty = 0.30;
+        c.insets = new Insets(0, 0, 0, 0);
+        panel.add(buildGuideCard(), c);
+
+        return panel;
+    }
+
+    private JPanel buildDailyChallengeCard() {
+        JPanel card = new JPanel(new GridBagLayout());
+        card.setBackground(BG_CARD);
+        card.setOpaque(true);
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_CLR, 1),
+                new EmptyBorder(12, 16, 12, 16)));
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1.0;
+        c.gridx = 0;
+
+        // Header Row: Title & Streak
+        c.gridy = 0;
+        JPanel headerRow = new JPanel(new BorderLayout());
+        headerRow.setOpaque(false);
+
+        JLabel title = new JLabel("📅 Daily Quest");
+        title.setFont(new Font("SansSerif", Font.BOLD, 13));
+        title.setForeground(TEXT_DARK);
+        headerRow.add(title, BorderLayout.WEST);
+
+        SessionRepository repo = new SessionRepository();
+        int streak = getCurrentStreak(repo);
+        JLabel streakLabel = new JLabel("🔥 " + streak + " Day Streak");
+        streakLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+        streakLabel.setForeground(ACCENT_GOLD);
+        headerRow.add(streakLabel, BorderLayout.EAST);
+        card.add(headerRow, c);
+
+        // Body Row: Calendar strip
+        c.gridy = 1;
+        c.insets = new Insets(10, 0, 2, 0);
+        calendarStripHolder = new JPanel(new BorderLayout());
+        calendarStripHolder.setOpaque(false);
+        calendarStripHolder.add(buildCalendarStrip());
+        card.add(calendarStripHolder, c);
+
+        return card;
+    }
+
+    private JPanel buildStatsCard() {
+        JPanel card = new JPanel(new GridBagLayout());
+        card.setBackground(BG_CARD);
+        card.setOpaque(true);
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_CLR, 1),
+                new EmptyBorder(12, 16, 12, 16)));
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1.0;
+        c.gridx = 0;
+
+        // Header
+        c.gridy = 0;
+        JLabel title = new JLabel("📊 Performance & Badges");
+        title.setFont(new Font("SansSerif", Font.BOLD, 13));
+        title.setForeground(TEXT_DARK);
+        card.add(title, c);
+
+        // Body summary stats
+        c.gridy = 1;
+        c.insets = new Insets(8, 0, 10, 0);
+        SessionRepository repo = new SessionRepository();
+        int totalSess = repo.loadRaw().size();
+        AnalyticsService analService = new AnalyticsService(repo);
+        com.mathquiz.service.AchievementService achievementService = new com.mathquiz.service.AchievementService(repo, analService);
+        long unlockedCount = achievementService.calculateAchievements().stream().filter(ach -> ach.unlocked).count();
+
+        JLabel infoLabel = new JLabel("<html><body>💾 <b>" + totalSess + "</b> Sessions completed<br>🏆 <b>" + unlockedCount + " / 10</b> Badges unlocked</body></html>");
+        infoLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        infoLabel.setForeground(TEXT_MUTED);
+        card.add(infoLabel, c);
+
+        // Actions
+        c.gridy = 2;
+        c.insets = new Insets(4, 0, 0, 0);
+        JPanel actionsRow = new JPanel(new GridLayout(1, 2, 10, 0));
+        actionsRow.setOpaque(false);
+
+        analyticsBtn = new JButton("📊 Analytics");
+        analyticsBtn.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        analyticsBtn.setFocusPainted(false);
+        analyticsBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        analyticsBtn.addActionListener(e -> nav.showAnalytics());
+        actionsRow.add(analyticsBtn);
+
+        achievementsBtn = new JButton("🏆 Badges");
+        achievementsBtn.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        achievementsBtn.setFocusPainted(false);
+        achievementsBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        achievementsBtn.addActionListener(e -> nav.showAchievements());
+        actionsRow.add(achievementsBtn);
+
+        card.add(actionsRow, c);
+
+        return card;
+    }
+
+    private JPanel buildGuideCard() {
+        JPanel card = new JPanel(new GridBagLayout());
+        card.setBackground(BG_CARD);
+        card.setOpaque(true);
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_CLR, 1),
+                new EmptyBorder(12, 16, 12, 16)));
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1.0;
+        c.gridx = 0;
+
+        // Header
+        c.gridy = 0;
+        JLabel title = new JLabel("🎯 Smart Practice & Guide");
+        title.setFont(new Font("SansSerif", Font.BOLD, 13));
+        title.setForeground(TEXT_DARK);
+        card.add(title, c);
+
+        // Body
+        c.gridy = 1;
+        c.insets = new Insets(8, 0, 10, 0);
+        JLabel infoLabel = new JLabel("<html><body>Practice weak categories or take a guide tour.</body></html>");
+        infoLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        infoLabel.setForeground(TEXT_MUTED);
+        card.add(infoLabel, c);
+
+        // Actions
+        c.gridy = 2;
+        c.insets = new Insets(4, 0, 0, 0);
+        JPanel actionsRow = new JPanel(new GridLayout(1, 3, 6, 0));
+        actionsRow.setOpaque(false);
+
+        smartPracticeBtn = new JButton("🎯 Practice");
+        smartPracticeBtn.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        smartPracticeBtn.setFocusPainted(false);
+        smartPracticeBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        smartPracticeBtn.addActionListener(e -> nav.startSmartPractice());
+        actionsRow.add(smartPracticeBtn);
+
+        JButton tourBtn = new JButton("🦉 Tour");
+        tourBtn.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        tourBtn.setFocusPainted(false);
+        tourBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        tourBtn.addActionListener(e -> nav.launchTour());
+        actionsRow.add(tourBtn);
+
+        JButton guideBtn = new JButton("❓ Guide");
+        guideBtn.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        guideBtn.setFocusPainted(false);
+        guideBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        guideBtn.addActionListener(e -> nav.showHelp("welcome"));
+        actionsRow.add(guideBtn);
+
+        card.add(actionsRow, c);
+
+        return card;
     }
 
     private void handleLoadCustomQuiz(Component parent) {
@@ -295,41 +496,6 @@ public class WelcomePanel extends JPanel {
         menu.show(parent, 0, parent.getHeight());
     }
 
-    private JPanel buildFooter() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
-        panel.setOpaque(false);
-        panel.setBorder(new EmptyBorder(8, 10, 20, 10));
-
-        // Help button ❓
-        JButton helpBtn = makeIconButton("❓ Guide");
-        helpBtn.addActionListener(e -> nav.showHelp("welcome"));
-        panel.add(helpBtn);
-
-        // Tour replay button 🦉
-        JButton tourBtn = makeIconButton("🦉 Tour");
-        tourBtn.addActionListener(e -> nav.launchTour());
-        panel.add(tourBtn);
-
-        // Analytics button 📊
-        analyticsBtn = makeIconButton("📊 Analytics");
-        analyticsBtn.addActionListener(e -> nav.showAnalytics());
-        panel.add(analyticsBtn);
-
-        // Smart Practice button 🎯
-        smartPracticeBtn = makeIconButton("🎯 Practice");
-        smartPracticeBtn.addActionListener(e -> nav.startSmartPractice());
-        panel.add(smartPracticeBtn);
-
-        // Achievements button 🏆
-        achievementsBtn = makeIconButton("🏆 Badges");
-        achievementsBtn.addActionListener(e -> nav.showAchievements());
-        panel.add(achievementsBtn);
-
-        return panel;
-    }
-
-
-
     private void handleStart() {
         String raw = qCountField.getText().trim();
         int qty;
@@ -351,7 +517,6 @@ public class WelcomePanel extends JPanel {
     }
 
     // ── Widget helpers ────────────────────────────────────────────────────────
-
     private JLabel makeLabel(String text) {
         JLabel lbl = new JLabel(text);
         lbl.setFont(new Font("SansSerif", Font.BOLD, 11));
@@ -377,46 +542,28 @@ public class WelcomePanel extends JPanel {
         return btn;
     }
 
-    private JButton makeIconButton(String text) {
-        JButton btn = new JButton(text);
-        btn.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        btn.setBackground(BG_CARD);
-        btn.setForeground(TEXT_MUTED);
-        btn.setFocusPainted(false);
-        btn.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER_CLR, 1),
-                new EmptyBorder(10, 18, 10, 18)));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        return btn;
-    }
-
     // =========================================================================
-    // Phase 3 Features
+    // Preference top bar and helpers
     // =========================================================================
-
     private JPanel buildTopBar() {
         JPanel bar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         bar.setOpaque(false);
 
-        // Profile Switcher
         profileButton = new JButton("👤 " + config.getCurrentProfile());
         styleToggleBtn(profileButton);
         profileButton.addActionListener(e -> showProfileMenu(profileButton));
         bar.add(profileButton);
 
-        // Font Scale Toggle
         scaleToggleBtn = new JButton("🔍 Scale: " + (int)(config.getFontSizeScale() * 100) + "%");
         styleToggleBtn(scaleToggleBtn);
         scaleToggleBtn.addActionListener(e -> toggleScale());
         bar.add(scaleToggleBtn);
 
-        // Sound Toggle
         soundToggleBtn = new JButton(getConfigSoundEmoji() + " Sound");
         styleToggleBtn(soundToggleBtn);
         soundToggleBtn.addActionListener(e -> showSoundMenu(soundToggleBtn));
         bar.add(soundToggleBtn);
 
-        // Theme Toggle
         themeToggleBtn = new JButton(AppTheme.isDarkMode() ? "☀️ Light" : "🌙 Dark");
         styleToggleBtn(themeToggleBtn);
         themeToggleBtn.addActionListener(e -> toggleTheme());
@@ -501,7 +648,6 @@ public class WelcomePanel extends JPanel {
         }
     }
 
-
     private void styleToggleBtn(JButton btn) {
         btn.setFont(new Font("SansSerif", Font.PLAIN, 11));
         btn.setBackground(AppTheme.getBgCard());
@@ -584,7 +730,7 @@ public class WelcomePanel extends JPanel {
     }
 
     private JPanel buildCalendarStrip() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));
         panel.setOpaque(false);
 
         SessionRepository repo = new SessionRepository();
@@ -601,20 +747,12 @@ public class WelcomePanel extends JPanel {
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyyMMdd");
         String todayStr = sdf.format(new java.util.Date());
         if (config.getLastDailyChallengeDate().equals(todayStr)) {
-            dailyBtn.setText("✅ Daily Completed");
+            dailyBtn.setText("✅ Completed");
             dailyBtn.setEnabled(false);
         } else {
             dailyBtn.addActionListener(e -> nav.startDailyChallenge());
         }
         panel.add(dailyBtn);
-
-        panel.add(Box.createHorizontalStrut(15));
-
-        int currentStreak = getCurrentStreak(repo);
-        JLabel flameLabel = new JLabel("🔥 " + currentStreak + " Day Streak");
-        flameLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
-        flameLabel.setForeground(AppTheme.getAccentGold());
-        panel.add(flameLabel);
 
         panel.add(Box.createHorizontalStrut(10));
 
@@ -702,96 +840,58 @@ public class WelcomePanel extends JPanel {
 
     public void applyTheme() {
         setBackground(AppTheme.getBgPrimary());
-        if (subBrand != null) subBrand.setForeground(AppTheme.getAccentGold());
-        if (titleLabel != null) titleLabel.setForeground(AppTheme.getTextDark());
-        if (taglineLabel != null) taglineLabel.setForeground(AppTheme.getTextMuted());
-        if (countLabel != null) countLabel.setForeground(AppTheme.getTextMuted());
-        if (diffLabel != null) diffLabel.setForeground(AppTheme.getTextMuted());
+        recolorTree(this);
+    }
 
-        if (qCountField != null) {
-            qCountField.setBackground(AppTheme.getBgCard());
-            qCountField.setForeground(AppTheme.getTextDark());
-            qCountField.setCaretColor(AppTheme.getTextDark());
-            qCountField.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(AppTheme.getBorderClr(), 1),
-                    new EmptyBorder(5, 10, 5, 10)));
-        }
-
-        if (diffCombo != null) {
-            diffCombo.setBackground(AppTheme.getBgCard());
-            diffCombo.setForeground(AppTheme.getTextDark());
-        }
-
-        if (startButton != null) {
-            startButton.setBackground(AppTheme.getTextDark());
-            startButton.setForeground(AppTheme.getBgCard());
-        }
-
-        if (soundToggleBtn != null) {
-            String volStr = config.isSoundEnabled() ? " " + config.getSoundVolume() + "%" : " Muted";
-            soundToggleBtn.setText(getConfigSoundEmoji() + volStr);
-            styleToggleBtn(soundToggleBtn);
-        }
-        if (themeToggleBtn != null) {
-            themeToggleBtn.setText(AppTheme.isDarkMode() ? "☀️ Light" : "🌙 Dark");
-            styleToggleBtn(themeToggleBtn);
-        }
-
-        if (profileButton != null) {
-            profileButton.setText("👤 " + config.getCurrentProfile());
-            styleToggleBtn(profileButton);
-        }
-        if (scaleToggleBtn != null) {
-            scaleToggleBtn.setText("🔍 Scale: " + (int)(config.getFontSizeScale() * 100) + "%");
-            styleToggleBtn(scaleToggleBtn);
-        }
-
-        if (customLabel != null) customLabel.setForeground(AppTheme.getTextMuted());
-        if (customBuilderBtn != null) {
-            customBuilderBtn.setBackground(AppTheme.getBgCard());
-            customBuilderBtn.setForeground(AppTheme.getTextMuted());
-            customBuilderBtn.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(AppTheme.getBorderClr(), 1),
-                    new EmptyBorder(6, 12, 6, 12)));
-        }
-        if (customLoadBtn != null) {
-            customLoadBtn.setBackground(AppTheme.getBgCard());
-            customLoadBtn.setForeground(AppTheme.getTextMuted());
-            customLoadBtn.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(AppTheme.getBorderClr(), 1),
-                    new EmptyBorder(6, 12, 6, 12)));
-        }
-
-        if (calendarStripHolder != null) {
-            calendarStripHolder.removeAll();
-            calendarStripHolder.add(buildCalendarStrip());
-            calendarStripHolder.revalidate();
-            calendarStripHolder.repaint();
-        }
-
-        if (configCardPanel != null && configCardPanel.getComponentCount() > 0 && configCardPanel.getComponent(0) instanceof JPanel) {
-            JPanel card = (JPanel) configCardPanel.getComponent(0);
-            card.setBackground(AppTheme.getBgCard());
-            card.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(AppTheme.getBorderClr(), 1),
-                    new EmptyBorder(30, 40, 30, 40)));
-        }
-
-        // Apply style to footer buttons recursively
-        if (footerPanel != null) {
-            for (Component c : footerPanel.getComponents()) {
-                if (c instanceof JButton) {
-                    JButton btn = (JButton) c;
-                    if (btn != startButton) {
-                        btn.setBackground(AppTheme.getBgCard());
-                        btn.setForeground(AppTheme.getTextMuted());
-                        btn.setBorder(BorderFactory.createCompoundBorder(
-                                BorderFactory.createLineBorder(AppTheme.getBorderClr(), 1),
-                                new EmptyBorder(10, 18, 10, 18)));
-                    }
+    private void recolorTree(Container parent) {
+        for (Component c : parent.getComponents()) {
+            if (c instanceof JPanel) {
+                JPanel p = (JPanel) c;
+                if (p.isOpaque() && p != this && p != topBarPanel) {
+                    p.setBackground(AppTheme.getBgCard());
+                    p.setBorder(BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(AppTheme.getBorderClr(), 1),
+                            p.getBorder() != null && p.getBorder() instanceof javax.swing.border.CompoundBorder
+                                    ? ((javax.swing.border.CompoundBorder)p.getBorder()).getInsideBorder()
+                                    : new EmptyBorder(16, 16, 16, 16)));
+                } else {
+                    p.setBackground(AppTheme.getBgPrimary());
                 }
+                recolorTree(p);
+            } else if (c instanceof JLabel) {
+                JLabel lbl = (JLabel) c;
+                if (lbl == subBrand) {
+                    lbl.setForeground(AppTheme.getAccentGold());
+                } else if (lbl == titleLabel) {
+                    lbl.setForeground(AppTheme.getTextDark());
+                } else {
+                    lbl.setForeground(AppTheme.getTextMuted());
+                }
+            } else if (c instanceof JButton) {
+                JButton btn = (JButton) c;
+                if (btn == startButton) {
+                    btn.setBackground(AppTheme.getTextDark());
+                    btn.setForeground(AppTheme.getBgCard());
+                } else {
+                    btn.setBackground(AppTheme.getBgCard());
+                    btn.setForeground(AppTheme.getTextMuted());
+                    btn.setBorder(BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(AppTheme.getBorderClr(), 1),
+                            new EmptyBorder(6, 12, 6, 12)));
+                }
+            } else if (c instanceof JComboBox) {
+                JComboBox<?> cb = (JComboBox<?>) c;
+                cb.setBackground(AppTheme.getBgCard());
+                cb.setForeground(AppTheme.getTextDark());
+            } else if (c instanceof JTextField) {
+                JTextField tf = (JTextField) c;
+                tf.setBackground(AppTheme.getBgCard());
+                tf.setForeground(AppTheme.getTextDark());
+                tf.setCaretColor(AppTheme.getTextDark());
+                tf.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(AppTheme.getBorderClr(), 1),
+                        new EmptyBorder(5, 10, 5, 10)));
             }
         }
     }
 }
-
