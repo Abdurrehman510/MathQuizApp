@@ -40,6 +40,7 @@ public class QuizFrame extends JFrame implements QuizNavigator {
     private final SmartPracticePanel smartPracticePanel;
     private final AchievementsPanel achievementsPanel;
     private final QuizBuilderPanel quizBuilderPanel;
+    private final MascotShopPanel  mascotShopPanel;
 
 
 
@@ -73,6 +74,7 @@ public class QuizFrame extends JFrame implements QuizNavigator {
     public static final String CARD_SMART_PRACTICE = "smart_practice";
     public static final String CARD_ACHIEVEMENTS = "achievements";
     public static final String CARD_QUIZ_BUILDER = "quiz_builder";
+    public static final String CARD_MASCOT_SHOP  = "mascot_shop";
 
 
 
@@ -110,6 +112,7 @@ public class QuizFrame extends JFrame implements QuizNavigator {
         smartPracticePanel = new SmartPracticePanel(this, analyticsService);
         achievementsPanel = new AchievementsPanel(this, achievementsService);
         quizBuilderPanel = new QuizBuilderPanel(this);
+        mascotShopPanel = new MascotShopPanel(this, soundService);
 
 
 
@@ -124,6 +127,7 @@ public class QuizFrame extends JFrame implements QuizNavigator {
         mainPanel.add(smartPracticePanel, CARD_SMART_PRACTICE);
         mainPanel.add(achievementsPanel, CARD_ACHIEVEMENTS);
         mainPanel.add(quizBuilderPanel, CARD_QUIZ_BUILDER);
+        mainPanel.add(mascotShopPanel, CARD_MASCOT_SHOP);
 
 
         add(mainPanel);
@@ -249,11 +253,30 @@ public class QuizFrame extends JFrame implements QuizNavigator {
             return;
         }
         soundService.playFanfare();
+        
+        // Calculate and reward profile-specific coins
+        int baseCoins = 20;
+        int correctBonus = session.getCorrectAnswersCount() * 5;
+        int totalEarned = baseCoins + correctBonus;
+
         if (session.getCategory().equalsIgnoreCase("Daily Challenge")) {
             java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyyMMdd");
             String todayStr = sdf.format(new java.util.Date());
             config.setLastDailyChallengeDate(todayStr);
+            totalEarned += 100; // Daily challenge bonus
         }
+        
+        config.addCoins(totalEarned);
+        
+        final int earnedMsg = totalEarned;
+        SwingUtilities.invokeLater(() -> {
+            JOptionPane.showMessageDialog(this,
+                "🎉 Quiz Complete! You earned " + earnedMsg + " 🪙 coins!\n" +
+                "Head to the Mascot Shop on the Home screen to customize Archie!",
+                "Math Rewards 🦉",
+                JOptionPane.INFORMATION_MESSAGE);
+        });
+
         // Save to disk
         repository.save(session);
         // Update results screen
@@ -280,9 +303,11 @@ public class QuizFrame extends JFrame implements QuizNavigator {
 
     @Override
     public void showAnalytics() {
-        soundService.playTransition();
-        analyticsPanel.refresh();
-        cardLayout.show(mainPanel, CARD_ANALYTICS);
+        if (com.mathquiz.service.ParentalGate.verifyParent(this)) {
+            soundService.playTransition();
+            analyticsPanel.refresh();
+            cardLayout.show(mainPanel, CARD_ANALYTICS);
+        }
     }
 
     @Override
@@ -326,6 +351,13 @@ public class QuizFrame extends JFrame implements QuizNavigator {
             soundService.playTransition();
             cardLayout.show(mainPanel, CARD_QUIZ_BUILDER);
         }
+    }
+
+    @Override
+    public void showMascotShop() {
+        soundService.playTransition();
+        mascotShopPanel.refresh();
+        cardLayout.show(mainPanel, CARD_MASCOT_SHOP);
     }
 
     @Override
@@ -379,6 +411,7 @@ public class QuizFrame extends JFrame implements QuizNavigator {
         smartPracticePanel.applyTheme();
         achievementsPanel.applyTheme();
         quizBuilderPanel.applyTheme();
+        mascotShopPanel.applyTheme();
 
         // Dynamically apply scalable font size factor
         double scale = config.getFontSizeScale();

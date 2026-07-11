@@ -294,6 +294,33 @@ Administrative controls and data deletion parameters are locked behind a **Paren
 
 ---
 
+## 🪙 Coins Economy & Custom Mascot Shop
+
+Atelier Arithmetic features an interactive offline reward economy that reinforces learning and daily study habits without distracting micro-transactions:
+
+### 1. Earn Math Rewards (Coins Economy)
+- **Base Rewards**: Complete any math session to earn a flat `20` coins.
+- **Accuracy Bonuses**: Earn an additional `5` coins for every question answered correctly.
+- **Daily seeded Quest**: Earn a massive `100` bonus coins for completing the Daily seeded Challenge.
+- **Encrypted Local Ledger**: All coin transactions, unlocked purchases, and equipped configurations are safely compiled and stored locally inside the profile-specific Base64 AES-128 preferences properties.
+
+### 2. Custom Mascot Shop
+- **Archie's Accessories**: Children can spend their math coins to buy cool decorations for Archie the Owl:
+  *   **Fancy Bow Tie** 🎀 (Cost: `80` coins)
+  *   **Cool Glasses** 🕶️ (Cost: `100` coins)
+  *   **Wizard Hat** 🧙‍♂️ (Cost: `150` coins)
+  *   **Gold Crown** 👑 (Cost: `300` coins)
+- **Dynamic Outfit Display**: Equipped accessories are worn by Archie and mentioned dynamically in his speech greetings (e.g. *"I'm wearing my Gold Crown 👑 today!"*).
+
+### 3. Dynamic Visual Themes
+Kids can unlock primary UI theme accent colors:
+- **Amethyst Theme** 🟣 (Cost: `200` coins) — Recolors active elements to a royal purple layout.
+- **Emerald Theme** 🟢 (Cost: `200` coins) — Recolors active elements to a vibrant green layout.
+- **Ruby Theme** 🔴 (Cost: `250` coins) — Recolors active elements to a modern red layout.
+Themes update the borders, buttons, and graphics of the entire Swing tree recursively in real time.
+
+---
+
 ## Immersive Audio System
 
 The application features a modular sound synthesizer engine (`SoundService.java`) which preloads audio files into memory for low-latency triggers:

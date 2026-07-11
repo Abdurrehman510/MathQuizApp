@@ -52,6 +52,8 @@ public class WelcomePanel extends JPanel {
     private JButton customBuilderBtn;
     private JButton customLoadBtn;
     private JLabel customLabel;
+    private JLabel infoLabel;
+    private JLabel streakLabel;
 
     private final AppConfig config = AppConfig.getInstance();
     private final QuizNavigator nav;
@@ -328,7 +330,7 @@ public class WelcomePanel extends JPanel {
 
         SessionRepository repo = new SessionRepository();
         int streak = getCurrentStreak(repo);
-        JLabel streakLabel = new JLabel("🔥 " + streak + " Day Streak");
+        streakLabel = new JLabel("🔥 " + streak + " Day Streak");
         streakLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
         streakLabel.setForeground(ACCENT_GOLD);
         headerRow.add(streakLabel, BorderLayout.EAST);
@@ -374,7 +376,7 @@ public class WelcomePanel extends JPanel {
         com.mathquiz.service.AchievementService achievementService = new com.mathquiz.service.AchievementService(repo, analService);
         long unlockedCount = achievementService.calculateAchievements().stream().filter(ach -> ach.unlocked).count();
 
-        JLabel infoLabel = new JLabel("<html><body>💾 <b>" + totalSess + "</b> Sessions completed<br>🏆 <b>" + unlockedCount + " / 10</b> Badges unlocked</body></html>");
+        infoLabel = new JLabel("<html><body>💾 <b>" + totalSess + "</b> Sessions completed<br>🏆 <b>" + unlockedCount + " / 10</b> Badges unlocked<br>🪙 <b>" + config.getCoins() + "</b> Coins earned</body></html>");
         infoLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
         infoLabel.setForeground(TEXT_MUTED);
         card.add(infoLabel, c);
@@ -382,22 +384,29 @@ public class WelcomePanel extends JPanel {
         // Actions
         c.gridy = 2;
         c.insets = new Insets(4, 0, 0, 0);
-        JPanel actionsRow = new JPanel(new GridLayout(1, 2, 10, 0));
+        JPanel actionsRow = new JPanel(new GridLayout(1, 3, 8, 0));
         actionsRow.setOpaque(false);
 
-        analyticsBtn = new JButton("📊 Analytics");
-        analyticsBtn.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        analyticsBtn = new JButton("📊 Stats");
+        analyticsBtn.setFont(new Font("SansSerif", Font.PLAIN, 11));
         analyticsBtn.setFocusPainted(false);
         analyticsBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         analyticsBtn.addActionListener(e -> nav.showAnalytics());
         actionsRow.add(analyticsBtn);
 
         achievementsBtn = new JButton("🏆 Badges");
-        achievementsBtn.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        achievementsBtn.setFont(new Font("SansSerif", Font.PLAIN, 11));
         achievementsBtn.setFocusPainted(false);
         achievementsBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         achievementsBtn.addActionListener(e -> nav.showAchievements());
         actionsRow.add(achievementsBtn);
+
+        JButton shopBtn = new JButton("🛍️ Shop");
+        shopBtn.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        shopBtn.setFocusPainted(false);
+        shopBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        shopBtn.addActionListener(e -> nav.showMascotShop());
+        actionsRow.add(shopBtn);
 
         card.add(actionsRow, c);
 
@@ -928,6 +937,41 @@ public class WelcomePanel extends JPanel {
 
     public void applyTheme() {
         setBackground(AppTheme.getBgPrimary());
+        
+        // Refresh Archie's speech bubble details
+        String accessory = config.getEquippedAccessory();
+        String accessoryStr = "None".equalsIgnoreCase(accessory) ? "" : " wearing my " + accessory + " 🎩";
+        if (taglineLabel != null) {
+            taglineLabel.setText("<html><body>🦉 <b>Archie says:</b> \"Ready for a math adventure" + accessoryStr + "? Configure below and select a category!\"</body></html>");
+        }
+        
+        // Refresh profile button text to reflect dynamic changes
+        if (profileButton != null) {
+            profileButton.setText("👤 " + config.getCurrentProfile());
+        }
+
+        // Refresh stats card info
+        SessionRepository repo = new SessionRepository();
+        int totalSess = repo.loadRaw().size();
+        AnalyticsService analService = new AnalyticsService(repo);
+        com.mathquiz.service.AchievementService achievementService = new com.mathquiz.service.AchievementService(repo, analService);
+        long unlockedCount = achievementService.calculateAchievements().stream().filter(ach -> ach.unlocked).count();
+        if (infoLabel != null) {
+            infoLabel.setText("<html><body>💾 <b>" + totalSess + "</b> Sessions completed<br>🏆 <b>" + unlockedCount + " / 10</b> Badges unlocked<br>🪙 <b>" + config.getCoins() + "</b> Coins earned</body></html>");
+        }
+
+        // Refresh streak and calendar strip
+        if (streakLabel != null) {
+            int streak = getCurrentStreak(repo);
+            streakLabel.setText("🔥 " + streak + " Day Streak");
+        }
+        if (calendarStripHolder != null) {
+            calendarStripHolder.removeAll();
+            calendarStripHolder.add(buildCalendarStrip());
+            calendarStripHolder.revalidate();
+            calendarStripHolder.repaint();
+        }
+
         recolorTree(this);
     }
 

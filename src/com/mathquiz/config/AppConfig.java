@@ -122,6 +122,73 @@ public class AppConfig {
         }
     }
 
+    // ── Profile-specific Customization & Visual Economy ──────────────────────
+
+    public int getCoins() {
+        String profile = getCurrentProfile();
+        try {
+            return Integer.parseInt(props.getProperty(profile + ".coins", "0"));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    public void setCoins(int count) {
+        String profile = getCurrentProfile();
+        props.setProperty(profile + ".coins", String.valueOf(count));
+        save();
+    }
+
+    public void addCoins(int count) {
+        setCoins(getCoins() + count);
+    }
+
+    public boolean isItemUnlocked(String itemId) {
+        if ("None".equalsIgnoreCase(itemId) || "Default".equalsIgnoreCase(itemId)) return true;
+        String profile = getCurrentProfile();
+        String raw = props.getProperty(profile + ".unlockedItems", "");
+        String[] parts = raw.split(",");
+        for (String p : parts) {
+            if (p.trim().equalsIgnoreCase(itemId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void unlockItem(String itemId) {
+        String profile = getCurrentProfile();
+        String raw = props.getProperty(profile + ".unlockedItems", "");
+        if (raw.isEmpty()) {
+            props.setProperty(profile + ".unlockedItems", itemId);
+        } else {
+            props.setProperty(profile + ".unlockedItems", raw + "," + itemId);
+        }
+        save();
+    }
+
+    public String getEquippedAccessory() {
+        String profile = getCurrentProfile();
+        return props.getProperty(profile + ".equippedAccessory", "None");
+    }
+
+    public void setEquippedAccessory(String item) {
+        String profile = getCurrentProfile();
+        props.setProperty(profile + ".equippedAccessory", item);
+        save();
+    }
+
+    public String getEquippedTheme() {
+        String profile = getCurrentProfile();
+        return props.getProperty(profile + ".equippedTheme", "Default");
+    }
+
+    public void setEquippedTheme(String theme) {
+        String profile = getCurrentProfile();
+        props.setProperty(profile + ".equippedTheme", theme);
+        save();
+    }
+
     public double getFontSizeScale() {
         try {
             return Double.parseDouble(props.getProperty("fontSizeScale", "1.25"));
