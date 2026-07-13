@@ -783,10 +783,10 @@ This application was engineered by **Abdurrehman**, Founder of an IT Consulting 
 ### 🤝 Let's Collaborate!
 Looking to design custom SaaS products, deploy AI tools, automate workflows, or hire a premium engineering partner for paid project work? We help businesses transform concepts into production-grade systems.
 
-- **🌐 Portfolio**: [abdurrehman.dev](https://abdurrehman.dev)
+- **🌐 Portfolio**: [abdurrehman.co.in](https://abdurrehman.co.in)
 - **🐙 GitHub**: [github.com/Abdurrehman510](https://github.com/Abdurrehman510)
-- **💼 LinkedIn**: [linkedin.com/in/abdurrehman](https://linkedin.com/in/abdurrehman)
-- **✉️ Email**: [abdurrehman.work@gmail.com](mailto:abdurrehman.work@gmail.com)
+- **💼 LinkedIn**: [linkedin.com/in/abdurrehman-narmawala](https://linkedin.com/in/abdurrehman-narmawala)
+- **✉️ Email**: [abdurrehmannarmawala510@gmail.com](mailto:abdurrehmannarmawala510@gmail.com)
 - **📞 Phone**: Available upon business inquiry via email
 
 ---
